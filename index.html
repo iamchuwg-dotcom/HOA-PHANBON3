@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#051622" />
+  <title>Phân bón | Thuyết trình Hóa học - Tổ 2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            deep: '#051622',
+            ocean: '#092436',
+            tealCard: '#0e3447',
+            mint: '#34d399',
+            limeAccent: '#d9f99d',
+            gold: '#fbbf24',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --bg-deep: #051622;
+      --bg-mid: #0a293d;
+      --glass: rgba(13, 46, 66, 0.62);
+      --glass-strong: rgba(11, 39, 57, 0.85);
+      --border: rgba(110, 231, 183, 0.22);
+      --lime: #d9f99d;
+      --mint: #34d399;
+      --cyan: #38bdf8;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-deep);
+      color: #f1f5f9;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Nền chuyển sắc & lưới khoa học */
+    .deck-bg {
+      background:
+        radial-gradient(circle at 85% 12%, rgba(52, 211, 153, 0.16), transparent 32%),
+        radial-gradient(circle at 12% 88%, rgba(56, 189, 248, 0.14), transparent 34%),
+        radial-gradient(circle at 50% 50%, #09263a 0%, #04121c 100%);
+    }
+
+    .grid-overlay {
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: radial-gradient(ellipse at center, black 55%, transparent 95%);
+    }
+
+    /* Glassmorphism Cards */
+    .glass-card {
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 40px -15px rgba(0, 0, 0, 0.45);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.28s ease, box-shadow 0.28s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(217, 249, 157, 0.48);
+      box-shadow: 0 22px 48px -12px rgba(16, 185, 129, 0.18);
+    }
+
+    /* Slide transitions */
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 82px 5vw 76px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(18px) scale(0.985);
+      transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  visibility 0.45s;
+      z-index: 2;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+      z-index: 3;
+    }
+
+    .slide-inner {
+      width: min(1220px, 100%);
+      max-height: 100%;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(52, 211, 153, 0.35) transparent;
+      padding-right: 4px;
+    }
+
+    .slide-inner::-webkit-scrollbar { width: 5px; }
+    .slide-inner::-webkit-scrollbar-thumb {
+      background: rgba(52, 211, 153, 0.35);
+      border-radius: 99px;
+    }
+
+    /* Thanh điều hướng nhanh */
+    .nav-pill {
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .nav-pill.active {
+      background: linear-gradient(135deg, #34d399, #a3e635);
+      color: #051622;
+      font-weight: 700;
+      box-shadow: 0 0 18px rgba(52, 211, 153, 0.4);
+    }
+
+    /* Bảng hóa học tương tác */
+    .chem-row {
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.15s ease;
+    }
+    .chem-row:hover, .chem-row.selected-row {
+      background-color: rgba(52, 211, 153, 0.14);
+    }
+    .chem-row.selected-row td:first-child {
+      color: #d9f99d;
+      font-weight: 700;
+    }
+
+    /* Thẻ 4 ĐÚNG */
+    .four-right-card {
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .four-right-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(217, 249, 157, 0.12), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .four-right-card:hover::after, .four-right-card.active-rule::after {
+      opacity: 1;
+    }
+    .four-right-card.active-rule {
+      border-color: #d9f99d;
+      background: rgba(16, 62, 82, 0.85);
+    }
+
+    /* Canvas hạt hóa học rơi */
+    #chemCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      transition: opacity 0.4s ease;
+    }
+
+    /* Khung ảnh với fallback đẹp */
+    .img-frame {
+      position: relative;
+      border-radius: 1.25rem;
+      overflow: hidden;
+      border: 1px solid rgba(110, 231, 183, 0.3);
+      background: linear-gradient(145deg, #0b2d42, #071e2e);
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.35); }
+      50% { box-shadow: 0 0 24px 4px rgba(52, 211, 153, 0.2); }
+    }
+    .glow-badge {
+      animation: pulseGlow 3s infinite;
+    }
+  </style>
+</head>
+<body class="deck-bg font-sans antialiased">
+
+  <!-- Lưới nền khoa học -->
+  <div class="fixed inset-0 grid-overlay pointer-events-none z-0"></div>
+
+  <!-- Hiệu ứng hạt nguyên tố & công thức hóa học rơi -->
+  <canvas id="chemCanvas"></canvas>
+
+  <!-- Thanh Topbar & Điều hướng nhanh 8 mục -->
+  <header class="fixed top-0 left-0 right-0 z-20 px-4 md:px-8 py-3 flex items-center justify-between gap-3 bg-[#04121c]/75 backdrop-blur-md border-b border-emerald-500/15">
+    <div class="flex items-center gap-2.5 shrink-0">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-lime-300 text-slate-950 font-extrabold flex items-center justify-center shadow-lg shadow-emerald-500/20">
+        NPK
+      </div>
+      <div class="hidden sm:block leading-tight">
+        <div class="text-xs font-bold tracking-wider uppercase text-emerald-300">Hóa học & Nông nghiệp</div>
+        <div class="text-[11px] text-slate-400">Chuyên đề: Phân bón</div>
+      </div>
+    </div>
+
+    <!-- Thanh mục lục 8 phần theo đúng file NOI DUNG.docx -->
+    <nav id="quickNav" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 max-w-[62vw] lg:max-w-none" aria-label="Điều hướng mục">
+      <button data-goto="0" class="nav-pill px-2.5 py-1 rounded-full text-xs text-slate-300 hover:text-white bg-white/5">Mở đầu</button>
+      <button data-goto="2" class="nav-pill px-2.5 py-1 rounded-full text-xs text-slate-300 hover:text-white bg-white/5">1. Giới thiệu</button>
+      <button data-goto="3" class="nav-pill px-2.5 py-1 rounded-full text-xs text-slate-300 hover:text-white bg-white/5">2. Phân loại</button>
+      <button data-goto="5" class="nav-pill px-2.5 py-1 rounded-full text-xs text-slate-300 hover:text-white bg-white/5">3. Thành phần HH</button>
+      <button data-goto="6" class="nav-pill px-2.5 py-1 rounded-full text-xs text-slate-300 hover:text-white bg-white/5">4. Vai trò</button>
+      <button data-goto="7" class="nav-pill px-2.5 py-1 rounded-full text-xs text-slate-300 hover:text-white bg-white/5">5. Sử dụng 4 Đúng</button>
+      <button data-goto="8" class="nav-pill px-2.5 py-1 rounded-full text-xs text-slate-300 hover:text-white bg-white/5">6. Môi trường</button>
+      <button data-goto="9" class="nav-pill px-2.5 py-1 rounded-full text-xs text-slate-300 hover:text-white bg-white/5">7. Xu hướng</button>
+      <button data-goto="11" class="nav-pill px-2.5 py-1 rounded-full text-xs text-slate-300 hover:text-white bg-white/5">8. Tổng kết & Quiz</button>
+    </nav>
+
+    <!-- Nút bật/tắt hiệu ứng hóa học & Nhãn Tổ 2 -->
+    <div class="flex items-center gap-2 shrink-0">
+      <button id="toggleChemBtn" title="Bật/Tắt hiệu ứng nguyên tố rơi" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-emerald-400/35 bg-emerald-950/50 text-emerald-200 hover:bg-emerald-800/50 transition cursor-pointer">
+        <span id="chemStatusDot" class="w-2 h-2 rounded-full bg-lime-300 animate-ping"></span>
+        <span class="hidden md:inline">Hiệu ứng HH:</span>
+        <span id="chemStatusText">BẬT</span>
+      </button>
+      <span class="px-3.5 py-1.5 rounded-full text-xs font-extrabold tracking-wider uppercase bg-lime-300/15 border border-lime-300/50 text-lime-300">
+        TỔ 2
+      </span>
+    </div>
+  </header>
+
+  <!-- ==================== SLIDE 0: TRANG BÌA ==================== -->
+  <section class="slide active" data-section="0">
+    <div class="slide-inner">
+      <div class="grid lg:grid-cols-12 gap-8 items-center">
+        <div class="lg:col-span-7 space-y-5">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-400/10 border border-emerald-400/30 text-emerald-300 text-xs font-bold uppercase tracking-widest">
+            <span>⚗️</span> Bài Thuyết Trình Hóa Học • Tổ 2
+          </div>
+          <p class="text-lg md:text-xl text-emerald-200/90 italic font-medium">
+            “Xin chào thầy cô và các bạn!”
+          </p>
+          <h1 class="text-5xl sm:text-7xl lg:text-8xl font-extrabold tracking-tight leading-none">
+            PHÂN <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-lime-300 to-teal-200">BÓN</span>
+          </h1>
+          <p class="text-slate-300 text-base md:text-lg max-w-2xl leading-relaxed">
+            Tìm hiểu bản chất hóa học, phân loại, vai trò đối với cây trồng, nguyên tắc sử dụng hợp lý <strong class="text-lime-300">4 ĐÚNG</strong> và xu hướng nông nghiệp xanh bền vững.
+          </p>
+
+          <!-- Bento mini overview 8 mục -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+            <button onclick="goToSlide(2)" class="glass-card p-3 rounded-xl text-left hover:border-lime-300 cursor-pointer">
+              <div class="text-[11px] font-mono text-lime-300">MỤC 01 – 02</div>
+              <div class="text-xs font-bold text-white mt-0.5">Khái niệm & Phân loại</div>
+            </button>
+            <button onclick="goToSlide(5)" class="glass-card p-3 rounded-xl text-left hover:border-lime-300 cursor-pointer">
+              <div class="text-[11px] font-mono text-emerald-300">MỤC 03 – 04</div>
+              <div class="text-xs font-bold text-white mt-0.5">Hóa học & Vai trò</div>
+            </button>
+            <button onclick="goToSlide(7)" class="glass-card p-3 rounded-xl text-left hover:border-lime-300 cursor-pointer">
+              <div class="text-[11px] font-mono text-sky-300">MỤC 05 – 06</div>
+              <div class="text-xs font-bold text-white mt-0.5">4 Đúng & Môi trường</div>
+            </button>
+            <button onclick="goToSlide(9)" class="glass-card p-3 rounded-xl text-left hover:border-lime-300 cursor-pointer">
+              <div class="text-[11px] font-mono text-amber-300">MỤC 07 – 08</div>
+              <div class="text-xs font-bold text-white mt-0.5">Xu hướng & Đố vui</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Thẻ tuần hoàn mini tương tác ở trang bìa -->
+        <div class="lg:col-span-5">
+          <div class="glass-card rounded-3xl p-6 border-emerald-400/30 relative overflow-hidden">
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-xs font-mono uppercase tracking-wider text-emerald-300">Bảng nguyên tố dinh dưỡng</span>
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-lime-300/20 text-lime-300 font-semibold">Đa lượng • Vi lượng</span>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+              <div class="rounded-2xl p-4 bg-gradient-to-br from-emerald-500/25 to-emerald-900/40 border border-emerald-400/40 text-center">
+                <div class="text-[11px] font-mono text-emerald-300">7 • Nitơ</div>
+                <div class="text-4xl font-extrabold text-white my-1">N</div>
+                <div class="text-xs text-slate-300 font-medium">Phân Đạm</div>
+              </div>
+              <div class="rounded-2xl p-4 bg-gradient-to-br from-amber-500/25 to-amber-900/40 border border-amber-400/40 text-center">
+                <div class="text-[11px] font-mono text-amber-300">15 • Photpho</div>
+                <div class="text-4xl font-extrabold text-white my-1">P</div>
+                <div class="text-xs text-slate-300 font-medium">Phân Lân</div>
+              </div>
+              <div class="rounded-2xl p-4 bg-gradient-to-br from-rose-500/25 to-rose-900/40 border border-rose-400/40 text-center">
+                <div class="text-[11px] font-mono text-rose-300">19 • Kali</div>
+                <div class="text-4xl font-extrabold text-white my-1">K</div>
+                <div class="text-xs text-slate-300 font-medium">Phân Kali</div>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-950/50 border border-white/10">
+              <div class="text-[11px] font-mono text-slate-400 mb-2">NGUYÊN TỐ VI LƯỢNG THIẾT YẾU:</div>
+              <div class="flex flex-wrap gap-2">
+                <span class="px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-400/30 font-mono text-xs text-sky-300 font-bold">Fe</span>
+                <span class="px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-400/30 font-mono text-xs text-sky-300 font-bold">Zn</span>
+                <span class="px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-400/30 font-mono text-xs text-sky-300 font-bold">Cu</span>
+                <span class="px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-400/30 font-mono text-xs text-sky-300 font-bold">Mn</span>
+                <span class="px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-400/30 font-mono text-xs text-sky-300 font-bold">B</span>
+                <span class="px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-400/30 font-mono text-xs text-sky-300 font-bold">Mo</span>
+              </div>
+            </div>
+            <div class="mt-5 flex items-center justify-between">
+              <span class="text-xs text-slate-400">Nhấn mũi tên → hoặc nút bên dưới</span>
+              <button onclick="goToSlide(2)" class="glow-badge px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-lime-300 text-slate-950 font-bold text-sm hover:scale-105 transition cursor-pointer">
+                Bắt đầu thuyết trình →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 1: THÀNH VIÊN TỔ 2 ==================== -->
+  <section class="slide" data-section="members">
+    <div class="slide-inner">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full bg-lime-300/15 border border-lime-300/40 text-lime-300 font-mono text-xs font-bold">TỔ 2</span>
+          <span class="text-xs uppercase tracking-widest text-emerald-300 font-semibold">Những người thực hiện</span>
+        </div>
+        <span class="text-xs font-mono text-slate-400">12 THÀNH VIÊN</span>
+      </div>
+
+      <div class="grid lg:grid-cols-12 gap-6 items-center">
+        <div class="lg:col-span-4 space-y-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-lime-300 text-slate-950 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/20">✦</div>
+          <h2 class="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+            THÀNH VIÊN <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-lime-300">TỔ 2</span>
+          </h2>
+          <p class="text-slate-300 leading-relaxed">Cùng nhau tìm hiểu, xây dựng và hoàn thành bài thuyết trình về <strong class="text-lime-300">PHÂN BÓN</strong>.</p>
+          <div class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-400/10 border border-emerald-400/25 text-emerald-200 text-xs font-semibold">
+            <span class="w-2 h-2 rounded-full bg-lime-300 animate-pulse"></span> HỌC TẬP • SÁNG TẠO • HỢP TÁC
+          </div>
+        </div>
+
+        <div class="lg:col-span-8">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-emerald-300">01</span><div class="text-base sm:text-lg font-bold text-white mt-2">Chấn Hưng</div><div class="h-1 w-9 rounded-full bg-emerald-400 mt-3"></div></div>
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-lime-300">02</span><div class="text-base sm:text-lg font-bold text-white mt-2">Hoàng Thái</div><div class="h-1 w-9 rounded-full bg-lime-300 mt-3"></div></div>
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-sky-300">03</span><div class="text-base sm:text-lg font-bold text-white mt-2">Gia Huy</div><div class="h-1 w-9 rounded-full bg-sky-400 mt-3"></div></div>
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-amber-300">04</span><div class="text-base sm:text-lg font-bold text-white mt-2">Quốc Dinh</div><div class="h-1 w-9 rounded-full bg-amber-300 mt-3"></div></div>
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-pink-300">05</span><div class="text-base sm:text-lg font-bold text-white mt-2">Ngọc Giàu</div><div class="h-1 w-9 rounded-full bg-pink-300 mt-3"></div></div>
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-emerald-300">06</span><div class="text-base sm:text-lg font-bold text-white mt-2">Thái Nguyên</div><div class="h-1 w-9 rounded-full bg-emerald-400 mt-3"></div></div>
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-lime-300">07</span><div class="text-base sm:text-lg font-bold text-white mt-2">Thanh Phương</div><div class="h-1 w-9 rounded-full bg-lime-300 mt-3"></div></div>
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-sky-300">08</span><div class="text-base sm:text-lg font-bold text-white mt-2">Quỳnh Anh</div><div class="h-1 w-9 rounded-full bg-sky-400 mt-3"></div></div>
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-amber-300">09</span><div class="text-base sm:text-lg font-bold text-white mt-2">Thanh Vũ</div><div class="h-1 w-9 rounded-full bg-amber-300 mt-3"></div></div>
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-pink-300">10</span><div class="text-base sm:text-lg font-bold text-white mt-2">Lăng Tường Vy</div><div class="h-1 w-9 rounded-full bg-pink-300 mt-3"></div></div>
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-emerald-300">11</span><div class="text-base sm:text-lg font-bold text-white mt-2">Nguyễn Tường Vy</div><div class="h-1 w-9 rounded-full bg-emerald-400 mt-3"></div></div>
+            <div class="glass-card rounded-2xl p-4 relative overflow-hidden"><span class="text-[10px] font-mono text-lime-300">12</span><div class="text-base sm:text-lg font-bold text-white mt-2">Thái Tường Vy</div><div class="h-1 w-9 rounded-full bg-lime-300 mt-3"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end">
+        <button onclick="goToSlide(2)" class="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-400 to-lime-300 text-slate-950 text-sm font-bold hover:scale-105 transition cursor-pointer">Bắt đầu nội dung →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 2: MỤC 1 - GIỚI THIỆU CHUNG VỀ PHÂN BÓN ==================== -->
+  <section class="slide" data-section="1">
+    <div class="slide-inner">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="px-3 py-1 rounded-full bg-lime-300/15 border border-lime-300/40 text-lime-300 font-mono text-xs font-bold">MỤC 1</span>
+        <span class="text-xs uppercase tracking-widest text-emerald-300 font-semibold">Tổng quan kiến thức nền tảng</span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-6">
+        1. Giới thiệu chung về <span class="text-lime-300">phân bón</span>
+      </h2>
+
+      <!-- Bento Grid: Chỉ sử dụng DUY NHẤT 1 hình ảnh cho toàn bộ Mục 1 -->
+      <div class="grid lg:grid-cols-12 gap-5 items-stretch">
+        <!-- Cột trái (7 cột): Tiểu mục 1 & Tiểu mục 2 -->
+        <div class="lg:col-span-7 flex flex-col gap-4">
+          <!-- 1.1 Phân bón là gì? -->
+          <div class="glass-card rounded-2xl p-5">
+            <div class="flex items-center gap-2.5 mb-3">
+              <span class="w-7 h-7 rounded-lg bg-emerald-400/20 text-emerald-300 font-bold text-sm flex items-center justify-center">1</span>
+              <h3 class="text-lg sm:text-xl font-bold text-white">Phân bón là gì?</h3>
+            </div>
+            <div class="space-y-2.5 text-sm sm:text-base text-slate-200 leading-relaxed">
+              <p class="p-3 rounded-xl bg-slate-950/45 border border-white/10">
+                <strong class="text-lime-300">• Khái niệm:</strong> Là các chất hữu cơ hoặc vô cơ chứa các nguyên tố dinh dưỡng như <span class="font-semibold text-emerald-300">Đạm (N), Lân (P), Kali (K)</span> và vi lượng mà cây không tự tổng hợp đủ từ không khí và nước.
+              </p>
+              <p class="p-3 rounded-xl bg-slate-950/45 border border-white/10">
+                <strong class="text-lime-300">• Phân loại chính:</strong> Gồm <span class="font-semibold text-emerald-300">phân hữu cơ</span> (phân chuồng, phân xanh, vi sinh) và <span class="font-semibold text-sky-300">phân hóa học</span> (urê, NPK, lân).
+              </p>
+            </div>
+          </div>
+
+          <!-- 1.2 Vì sao cây trồng cần phân bón? -->
+          <div class="glass-card rounded-2xl p-5 flex-1">
+            <div class="flex items-center gap-2.5 mb-3">
+              <span class="w-7 h-7 rounded-lg bg-lime-300/20 text-lime-300 font-bold text-sm flex items-center justify-center">2</span>
+              <h3 class="text-lg sm:text-xl font-bold text-white">Vì sao cây trồng cần phân bón?</h3>
+            </div>
+            <div class="grid sm:grid-cols-3 gap-3">
+              <div class="p-3.5 rounded-xl bg-emerald-950/45 border border-emerald-500/25">
+                <div class="text-xs font-bold text-lime-300 uppercase mb-1">Bù đắp dinh dưỡng</div>
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">Đất canh tác lâu ngày bị bạc màu và cạn kiệt khoáng chất sau mỗi vụ thu hoạch.</p>
+              </div>
+              <div class="p-3.5 rounded-xl bg-emerald-950/45 border border-emerald-500/25">
+                <div class="text-xs font-bold text-emerald-300 uppercase mb-1">Nuôi dưỡng từng giai đoạn</div>
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">Cây cần nguồn lực bổ sung kịp thời để nảy mầm, ra hoa, đậu quả và nuôi hạt.</p>
+              </div>
+              <div class="p-3.5 rounded-xl bg-emerald-950/45 border border-emerald-500/25">
+                <div class="text-xs font-bold text-sky-300 uppercase mb-1">Tăng sức đề kháng</div>
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">Đủ dinh dưỡng giúp rễ khỏe, cây cứng cáp và chống chịu tốt với sâu bệnh, thời tiết xấu.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cột phải (5 cột): Duy nhất 1 hình ảnh minh họa cho Mục 1 -->
+        <div class="lg:col-span-5 flex flex-col">
+          <div class="glass-card rounded-2xl p-4 h-full flex flex-col justify-between">
+            <div class="img-frame flex-1 min-h-[240px] flex items-center justify-center">
+              <img
+                src="asset/muc1.png"
+                alt="Các loại hạt phân bón"
+                class="w-full h-full max-h-[370px] object-cover"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              />
+              <!-- Fallback minh họa nếu không tìm thấy file cục bộ -->
+              <div class="hidden flex-col items-center justify-center p-6 text-center w-full h-full bg-gradient-to-br from-emerald-900/50 to-slate-900">
+                <svg class="w-20 h-20 text-lime-300 mb-3" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="22" cy="24" r="6" fill="rgba(52,211,153,0.3)"/>
+                  <circle cx="42" cy="22" r="7" fill="rgba(217,249,157,0.3)"/>
+                  <circle cx="32" cy="40" r="8" fill="rgba(56,189,248,0.3)"/>
+                  <path d="M14 50c6-6 30-6 36 0" stroke-linecap="round"/>
+                </svg>
+                <div class="font-bold text-emerald-200">Các loại hạt phân bón</div>
+                <div class="text-xs text-slate-400 mt-1">Hữu cơ & Vô cơ (N - P - K)</div>
+              </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs text-slate-300 px-1">
+              <span>Hình minh họa: Các dạng hạt phân bón cung cấp dưỡng chất cho cây.</span>
+              <span class="font-mono text-emerald-300">N • P • K</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 2: MỤC 2 (TRANG 2A) - PHÂN ĐẠM (N) & PHÂN LÂN (P) ==================== -->
+  <section class="slide" data-section="2">
+    <div class="slide-inner">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full bg-lime-300/15 border border-lime-300/40 text-lime-300 font-mono text-xs font-bold">MỤC 2 • TRANG 1/2</span>
+          <span class="text-xs uppercase tracking-widest text-emerald-300 font-semibold">Phân bón đơn đa lượng</span>
+        </div>
+        <button onclick="goToSlide(4)" class="text-xs px-3 py-1 rounded-full bg-white/10 hover:bg-emerald-500/25 text-lime-300 font-semibold transition cursor-pointer">
+          Xem tiếp: 3. Phân Kali & 4. NPK →
+        </button>
+      </div>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-6">
+        2. Phân loại phân bón: <span class="text-emerald-300">Phân đạm</span> & <span class="text-amber-300">Phân lân</span>
+      </h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- 1. Phân đạm (N) -->
+        <article class="glass-card rounded-3xl p-6 border-t-4 border-t-emerald-400 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <span class="text-xs font-mono text-emerald-300 uppercase">Loại 1</span>
+                <h3 class="text-2xl font-extrabold text-white">1. Phân đạm (N)</h3>
+              </div>
+              <div class="w-14 h-14 rounded-2xl bg-emerald-400/20 border border-emerald-400/40 flex flex-col items-center justify-center">
+                <span class="text-2xl font-extrabold text-emerald-300 leading-none">N</span>
+                <span class="text-[10px] font-mono text-slate-300">Nitơ</span>
+              </div>
+            </div>
+
+            <div class="space-y-3 text-sm leading-relaxed">
+              <div class="p-3.5 rounded-2xl bg-slate-950/50 border border-white/10">
+                <div class="font-bold text-emerald-300 mb-1">✦ Đặc điểm:</div>
+                <p class="text-slate-200">Cung cấp nguyên tố <strong class="text-white">Nitơ (N)</strong> giúp cây phát triển thân, cành, lá và tăng cường quang hợp. Các loại phổ biến gồm <span class="text-lime-200 font-medium">phân Urê, Đạm Sunfat (SA), và Đạm Nitrat</span>.</p>
+              </div>
+              <div class="p-3.5 rounded-2xl bg-slate-950/50 border border-white/10">
+                <div class="font-bold text-emerald-300 mb-1">✦ Có ở đâu:</div>
+                <p class="text-slate-200">Sản xuất công nghiệp từ khí thiên nhiên hoặc than đá tại các nhà máy phân bón (<span class="text-white">Đạm Phú Mỹ, Đạm Cà Mau</span>). Đạm tự nhiên có trong nước tiểu gia súc, phân chuồng hoai mục và các loại cây họ Đậu.</p>
+              </div>
+              <div class="p-3.5 rounded-2xl bg-emerald-950/45 border border-emerald-500/25">
+                <div class="font-bold text-lime-300 mb-1">✦ Bón cho cây gì:</div>
+                <p class="text-slate-200">Rất cần cho các loại <strong class="text-white">rau ăn lá</strong> (cải, xà lách, rau muống), <strong class="text-white">cây lấy sợi</strong> (bông, đay) và dùng cho mọi loại cây trồng ở giai đoạn cây con hoặc phục hồi sau thu hoạch.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 2. Phân lân (P) -->
+        <article class="glass-card rounded-3xl p-6 border-t-4 border-t-amber-400 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <span class="text-xs font-mono text-amber-300 uppercase">Loại 2</span>
+                <h3 class="text-2xl font-extrabold text-white">2. Phân lân (P)</h3>
+              </div>
+              <div class="w-14 h-14 rounded-2xl bg-amber-400/20 border border-amber-400/40 flex flex-col items-center justify-center">
+                <span class="text-2xl font-extrabold text-amber-300 leading-none">P</span>
+                <span class="text-[10px] font-mono text-slate-300">Photpho</span>
+              </div>
+            </div>
+
+            <div class="space-y-3 text-sm leading-relaxed">
+              <div class="p-3.5 rounded-2xl bg-slate-950/50 border border-white/10">
+                <div class="font-bold text-amber-300 mb-1">✦ Đặc điểm:</div>
+                <p class="text-slate-200">Cung cấp nguyên tố <strong class="text-white">Photpho (P)</strong> giúp kích thích bộ rễ phát triển, thúc đẩy quá trình ra hoa, đậu quả và tăng sức chống chịu hạn, rét. Phổ biến gồm <span class="text-amber-200 font-medium">Supe lân và Lân nung chảy</span>.</p>
+              </div>
+              <div class="p-3.5 rounded-2xl bg-slate-950/50 border border-white/10">
+                <div class="font-bold text-amber-300 mb-1">✦ Có ở đâu:</div>
+                <p class="text-slate-200">Khai thác và chế biến từ các mỏ quặng tự nhiên như <strong class="text-white">quặng Apatit (ở Lào Cai)</strong> hoặc <strong class="text-white">quặng Photphorit</strong>.</p>
+              </div>
+              <div class="p-3.5 rounded-2xl bg-amber-950/35 border border-amber-500/25">
+                <div class="font-bold text-lime-300 mb-1">✦ Bón cho cây gì:</div>
+                <p class="text-slate-200">Phù hợp để <strong class="text-white">bón lót</strong> cho hầu hết các loại cây trước khi gieo trồng. Đặc biệt hiệu quả với cây họ Đậu, cây ăn quả, cây công nghiệp (cà phê, hồ tiêu) và cây trên đất phèn, đất chua.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 3: MỤC 2 (TRANG 2B) - PHÂN KALI (K) & PHÂN HỖN HỢP NPK ==================== -->
+  <section class="slide" data-section="2">
+    <div class="slide-inner">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full bg-lime-300/15 border border-lime-300/40 text-lime-300 font-mono text-xs font-bold">MỤC 2 • TRANG 2/2</span>
+          <span class="text-xs uppercase tracking-widest text-emerald-300 font-semibold">Phân Kali & Phân hỗn hợp</span>
+        </div>
+        <button onclick="goToSlide(3)" class="text-xs px-3 py-1 rounded-full bg-white/10 hover:bg-emerald-500/25 text-slate-300 font-semibold transition cursor-pointer">
+          ← Quay lại: 1. Phân Đạm & 2. Phân Lân
+        </button>
+      </div>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-5">
+        2. Phân loại phân bón: <span class="text-rose-300">Phân kali</span> & <span class="text-sky-300">Phân NPK</span>
+      </h2>
+
+      <div class="grid lg:grid-cols-12 gap-5 items-stretch">
+        <!-- 3. Phân kali (K) - 5 cột -->
+        <article class="lg:col-span-5 glass-card rounded-3xl p-5 border-t-4 border-t-rose-400 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-xl font-extrabold text-white">3. Phân kali (K)</h3>
+              <span class="px-3 py-1 rounded-xl bg-rose-500/20 border border-rose-400/40 font-mono font-extrabold text-rose-300">K • Kali</span>
+            </div>
+            <div class="space-y-2.5 text-xs sm:text-sm leading-relaxed">
+              <div class="p-3 rounded-xl bg-slate-950/50 border border-white/10">
+                <strong class="text-rose-300">• Đặc điểm:</strong> Cung cấp nguyên tố Kali (K) giúp vận chuyển chất dinh dưỡng, làm cứng cây, chống đổ ngã, tăng kháng sâu bệnh và cải thiện chất lượng nông sản (tăng độ ngọt, màu sắc đẹp). Phổ biến: <span class="text-white font-medium">Kali Clorua (MOP), Kali Sunfat (SOP)</span>.
+              </div>
+              <div class="p-3 rounded-xl bg-slate-950/50 border border-white/10">
+                <strong class="text-rose-300">• Có ở đâu:</strong> Khai thác từ các mỏ muối khoáng Kali tự nhiên dưới lòng đất (nhập khẩu từ Nga, Belarus, Canada, Israel). <span class="text-lime-200">Tro bếp thực vật</span> cũng chứa nhiều Kali tự nhiên.
+              </div>
+              <div class="p-3 rounded-xl bg-rose-950/35 border border-rose-500/25">
+                <strong class="text-lime-300">• Bón cho cây gì:</strong> Cây lấy củ (khoai lang, khoai tây, sắn), cây lấy đường (mía), cây ăn quả (cam, bưởi, sầu riêng, xoài) và cây lúa giai đoạn làm đòng, nuôi hạt.
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 4. Phân hỗn hợp NPK - 4 cột -->
+        <article class="lg:col-span-4 glass-card rounded-3xl p-5 border-t-4 border-t-sky-400 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-xl font-extrabold text-white">4. Phân hỗn hợp NPK</h3>
+              <span class="px-2.5 py-1 rounded-xl bg-sky-500/20 border border-sky-400/40 font-mono font-extrabold text-sky-300 text-xs">N+P+K</span>
+            </div>
+            <div class="space-y-3 text-xs sm:text-sm leading-relaxed">
+              <div class="p-3.5 rounded-xl bg-slate-950/50 border border-white/10">
+                <strong class="text-sky-300 block mb-1">• Đặc điểm:</strong>
+                Là loại phân bón hóa học chứa đồng thời cả <strong class="text-lime-300">3 nguyên tố đa lượng N, P, K</strong> trong cùng một sản phẩm, giúp cung cấp dinh dưỡng cân đối và tiện lợi khi bón.
+              </div>
+              <div class="p-3.5 rounded-xl bg-slate-950/50 border border-white/10">
+                <strong class="text-sky-300 block mb-1">• Có ở đâu:</strong>
+                Được sản xuất bằng cách phối trộn hoặc hóa hợp các loại phân đơn (Đạm, Lân, Kali) tại các nhà máy sản xuất phân bón uy tín như: <span class="text-white font-semibold">Bình Điền – Đầu Trâu, Việt Nhật, Lâm Thao</span>.
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 p-3 rounded-xl bg-sky-950/50 border border-sky-400/25 text-center">
+            <span class="font-mono text-xs text-sky-200">Tỷ lệ N : P : K điều chỉnh linh hoạt theo từng giai đoạn cây trồng</span>
+          </div>
+        </article>
+
+        <!-- Hình minh họa - 3 cột -->
+        <div class="lg:col-span-3 glass-card rounded-3xl p-4 flex flex-col justify-between">
+          <div class="img-frame flex-1 min-h-[210px] flex items-center justify-center">
+            <img
+              src="asset/muc2.png"
+              alt="Hạt phân hỗn hợp NPK"
+              class="w-full h-full object-cover"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            />
+            <div class="hidden flex-col items-center justify-center p-4 text-center w-full h-full bg-gradient-to-b from-sky-900/40 to-slate-900">
+              <div class="flex gap-1.5 mb-2">
+                <span class="w-5 h-5 rounded-full bg-emerald-400 inline-block"></span>
+                <span class="w-5 h-5 rounded-full bg-amber-400 inline-block"></span>
+                <span class="w-5 h-5 rounded-full bg-rose-400 inline-block"></span>
+              </div>
+              <div class="font-bold text-sm text-white">Hạt phân NPK</div>
+              <div class="text-[11px] text-slate-400 mt-1">Kết hợp 3 nguyên tố đa lượng</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-300 mt-3 text-center">Hạt phân NPK tổng hợp đồng thời N, P và K.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 4: MỤC 3 - THÀNH PHẦN HÓA HỌC CỦA CÁC LOẠI PHÂN BÓN ==================== -->
+  <section class="slide" data-section="3">
+    <div class="slide-inner">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="px-3 py-1 rounded-full bg-lime-300/15 border border-lime-300/40 text-lime-300 font-mono text-xs font-bold">MỤC 3</span>
+        <span class="text-xs uppercase tracking-widest text-emerald-300 font-semibold">Bản chất hóa học • Nhấp vào từng dòng để xem chi tiết</span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-6">
+        3. Thành phần hóa học <span class="text-lime-300">của các loại phân bón</span>
+      </h2>
+
+      <div class="grid lg:grid-cols-12 gap-6 items-start">
+        <!-- Bảng tổng hợp tương tác (7 cột) -->
+        <div class="lg:col-span-7 glass-card rounded-3xl overflow-hidden">
+          <div class="px-5 py-3.5 bg-emerald-500/10 border-b border-emerald-400/20 flex items-center justify-between">
+            <span class="font-bold text-sm text-lime-300 uppercase tracking-wider">Bảng tổng hợp thành phần hóa học</span>
+            <span class="text-xs text-slate-400">👆 Chọn 1 dòng để phân tích</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm sm:text-base">
+              <thead>
+                <tr class="border-b border-white/10 text-xs uppercase tracking-wider text-emerald-300 bg-slate-950/40">
+                  <th class="py-3.5 px-5">Loại phân bón</th>
+                  <th class="py-3.5 px-5">Thành phần hóa học tiêu biểu</th>
+                </tr>
+              </thead>
+              <tbody id="chemTableBody" class="divide-y divide-white/10">
+                <tr class="chem-row selected-row" data-idx="0">
+                  <td class="py-3.5 px-5 font-semibold text-white">Phân đạm</td>
+                  <td class="py-3.5 px-5 font-mono text-emerald-300 font-bold">CO(NH₂)₂, NH₄NO₃</td>
+                </tr>
+                <tr class="chem-row" data-idx="1">
+                  <td class="py-3.5 px-5 font-semibold text-white">Phân lân</td>
+                  <td class="py-3.5 px-5 font-mono text-amber-300 font-bold">Ca(H₂PO₄)₂, Ca₃(PO₄)₂</td>
+                </tr>
+                <tr class="chem-row" data-idx="2">
+                  <td class="py-3.5 px-5 font-semibold text-white">Phân kali</td>
+                  <td class="py-3.5 px-5 font-mono text-rose-300 font-bold">KCl, K₂SO₄</td>
+                </tr>
+                <tr class="chem-row" data-idx="3">
+                  <td class="py-3.5 px-5 font-semibold text-white">Phân NPK</td>
+                  <td class="py-3.5 px-5 font-mono text-sky-300 font-bold">N, P, K</td>
+                </tr>
+                <tr class="chem-row" data-idx="4">
+                  <td class="py-3.5 px-5 font-semibold text-white">Phân hữu cơ</td>
+                  <td class="py-3.5 px-5 text-lime-200 font-medium">Hợp chất hữu cơ, chất mùn</td>
+                </tr>
+                <tr class="chem-row" data-idx="5">
+                  <td class="py-3.5 px-5 font-semibold text-white">Phân vi lượng</td>
+                  <td class="py-3.5 px-5 font-mono text-purple-300 font-bold">Fe, Zn, Cu, Mn, B, Mo</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Card phân tích chi tiết công thức hóa học khi bấm vào bảng (5 cột) -->
+        <div class="lg:col-span-5 glass-card rounded-3xl p-6 border-emerald-400/35 flex flex-col justify-between min-h-[340px]">
+          <div id="chemDetailBox">
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-3 py-1 rounded-full bg-emerald-400/15 text-emerald-300 text-xs font-mono font-bold">CHI TIẾT HÓA HỌC</span>
+              <span id="chemDetailBadge" class="text-xs text-slate-400">01 / 06</span>
+            </div>
+            <h3 id="chemDetailTitle" class="text-2xl font-extrabold text-lime-300 mb-2">Phân đạm</h3>
+            <div id="chemDetailFormula" class="inline-block px-4 py-2 rounded-xl bg-slate-950/70 border border-emerald-400/30 font-mono text-lg sm:text-xl font-bold text-white mb-4">
+              CO(NH₂)₂ • NH₄NO₃
+            </div>
+            <p id="chemDetailDesc" class="text-sm sm:text-base text-slate-200 leading-relaxed mb-4">
+              • <strong>CO(NH₂)₂ (Urê):</strong> Hợp chất hữu cơ chứa hàm lượng Nitơ cao (~46%), tan tốt trong nước.<br/>
+              • <strong>NH₄NO₃ (Amoni nitrat):</strong> Cung cấp đồng thời cả ion NH₄⁺ và NO₃⁻ giúp cây hấp thu nhanh.
+            </p>
+          </div>
+          <div class="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+            <span>Mẹo: Nhấp vào từng hàng bên trái để đối chiếu công thức</span>
+            <span class="text-emerald-300 font-mono">H₂O + Ion</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 5: MỤC 4 - VAI TRÒ VÀ TÁC DỤNG CỦA PHÂN BÓN ==================== -->
+  <section class="slide" data-section="4">
+    <div class="slide-inner">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="px-3 py-1 rounded-full bg-lime-300/15 border border-lime-300/40 text-lime-300 font-mono text-xs font-bold">MỤC 4</span>
+        <span class="text-xs uppercase tracking-widest text-emerald-300 font-semibold">Giá trị đối với cây trồng & nông nghiệp</span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-6">
+        4. Vai trò và tác dụng <span class="text-lime-300">của phân bón</span>
+      </h2>
+
+      <div class="grid lg:grid-cols-12 gap-5 items-stretch">
+        <!-- Cột 1: Vai trò (4 cột) -->
+        <div class="lg:col-span-4 glass-card rounded-3xl p-6 border-l-4 border-l-emerald-400 flex flex-col justify-between">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-400/15 text-emerald-300 text-xs font-bold uppercase mb-4">
+              🌱 Vai trò của phân bón
+            </div>
+            <ul class="space-y-3.5 text-sm sm:text-base text-slate-200">
+              <li class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/45 border border-white/10">
+                <span class="text-emerald-400 font-bold mt-0.5">✓</span>
+                <span>Cung cấp các chất dinh dưỡng cần thiết cho cây trồng.</span>
+              </li>
+              <li class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/45 border border-white/10">
+                <span class="text-emerald-400 font-bold mt-0.5">✓</span>
+                <span>Bổ sung và cải thiện độ phì nhiêu của đất.</span>
+              </li>
+              <li class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/45 border border-white/10">
+                <span class="text-emerald-400 font-bold mt-0.5">✓</span>
+                <span>Giúp cây sinh trưởng và phát triển tốt.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Cột 2: Tác dụng (4 cột) -->
+        <div class="lg:col-span-4 glass-card rounded-3xl p-6 border-l-4 border-l-lime-300 flex flex-col justify-between">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-lime-300/15 text-lime-300 text-xs font-bold uppercase mb-4">
+              ⚡ Tác dụng của phân bón
+            </div>
+            <ul class="space-y-3.5 text-sm sm:text-base text-slate-200">
+              <li class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/45 border border-white/10">
+                <span class="text-lime-300 font-bold mt-0.5">★</span>
+                <span>Tăng năng suất và chất lượng nông sản.</span>
+              </li>
+              <li class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/45 border border-white/10">
+                <span class="text-lime-300 font-bold mt-0.5">★</span>
+                <span>Giúp cây khỏe mạnh, tăng khả năng chống chịu sâu bệnh và điều kiện thời tiết bất lợi.</span>
+              </li>
+              <li class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/45 border border-white/10">
+                <span class="text-lime-300 font-bold mt-0.5">★</span>
+                <span>Góp phần nâng cao hiệu quả sản xuất nông nghiệp.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Cột 3: Hình ảnh minh họa (4 cột) -->
+        <div class="lg:col-span-4 glass-card rounded-3xl p-4 flex flex-col justify-between">
+          <div class="img-frame flex-1 min-h-[220px] flex items-center justify-center">
+            <img
+              src="asset/muc4.png"
+              alt="Vai trò của N P K với sự phát triển của cây"
+              class="w-full h-full object-cover"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            />
+            <div class="hidden flex-col items-center justify-center p-5 text-center w-full h-full bg-gradient-to-br from-emerald-950 to-slate-900">
+              <div class="text-3xl mb-2">🌿</div>
+              <div class="font-bold text-lime-300">N • P • K & Trung vi lượng</div>
+              <div class="text-xs text-slate-300 mt-1">Thúc đẩy nảy mầm, ra lá, tạo rễ và nuôi hạt</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-300 mt-3 text-center">Các nguyên tố dinh dưỡng giúp cây phát triển toàn diện qua từng giai đoạn.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 6: MỤC 5 - CÁCH SỬ DỤNG PHÂN BÓN HỢP LÝ (4 ĐÚNG) ==================== -->
+  <section class="slide" data-section="5">
+    <div class="slide-inner">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="px-3 py-1 rounded-full bg-lime-300/15 border border-lime-300/40 text-lime-300 font-mono text-xs font-bold">MỤC 5</span>
+        <span class="text-xs uppercase tracking-widest text-emerald-300 font-semibold">Nguyên tắc vàng trong canh tác • Bấm vào từng thẻ</span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-6">
+        5. Cách sử dụng phân bón hợp lý: <span class="text-lime-300">Nguyên tắc “4 ĐÚNG”</span>
+      </h2>
+
+      <div class="grid lg:grid-cols-12 gap-6 items-stretch">
+        <!-- 4 Thẻ tương tác 4 ĐÚNG (7 cột) -->
+        <div class="lg:col-span-7 grid sm:grid-cols-2 gap-4">
+          <div class="glass-card four-right-card active-rule rounded-2xl p-5" onclick="selectFourRight(this)">
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-9 h-9 rounded-xl bg-emerald-400 text-slate-950 font-extrabold flex items-center justify-center">1</span>
+              <span class="text-xs font-mono text-emerald-300">ĐÚNG LOẠI</span>
+            </div>
+            <h3 class="text-lg font-extrabold text-white mb-1.5">Bón đúng loại</h3>
+            <p class="text-sm text-slate-200 leading-relaxed">
+              Chọn phân bón phù hợp với từng loại cây trồng và từng giai đoạn phát triển.
+            </p>
+          </div>
+
+          <div class="glass-card four-right-card rounded-2xl p-5" onclick="selectFourRight(this)">
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-9 h-9 rounded-xl bg-lime-300 text-slate-950 font-extrabold flex items-center justify-center">2</span>
+              <span class="text-xs font-mono text-lime-300">ĐÚNG LIỀU LƯỢNG</span>
+            </div>
+            <h3 class="text-lg font-extrabold text-white mb-1.5">Bón đúng liều lượng</h3>
+            <p class="text-sm text-slate-200 leading-relaxed">
+              Không bón quá nhiều hoặc quá ít để tránh lãng phí và gây hại cho cây.
+            </p>
+          </div>
+
+          <div class="glass-card four-right-card rounded-2xl p-5" onclick="selectFourRight(this)">
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-9 h-9 rounded-xl bg-amber-300 text-slate-950 font-extrabold flex items-center justify-center">3</span>
+              <span class="text-xs font-mono text-amber-300">ĐÚNG THỜI ĐIỂM</span>
+            </div>
+            <h3 class="text-lg font-extrabold text-white mb-1.5">Bón đúng thời điểm</h3>
+            <p class="text-sm text-slate-200 leading-relaxed">
+              Bón phân vào thời kỳ cây cần nhiều chất dinh dưỡng.
+            </p>
+          </div>
+
+          <div class="glass-card four-right-card rounded-2xl p-5" onclick="selectFourRight(this)">
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-9 h-9 rounded-xl bg-sky-300 text-slate-950 font-extrabold flex items-center justify-center">4</span>
+              <span class="text-xs font-mono text-sky-300">ĐÚNG CÁCH</span>
+            </div>
+            <h3 class="text-lg font-extrabold text-white mb-1.5">Bón đúng cách</h3>
+            <p class="text-sm text-slate-200 leading-relaxed">
+              Bón theo hướng dẫn, kết hợp tưới nước phù hợp để cây hấp thụ tốt.
+            </p>
+          </div>
+        </div>
+
+        <!-- Hình minh họa 4 Đúng (5 cột) -->
+        <div class="lg:col-span-5 glass-card rounded-3xl p-4 flex flex-col justify-between">
+          <div class="img-frame flex-1 min-h-[230px] flex items-center justify-center">
+            <img
+              src="asset/muc5.png"
+              alt="Sử dụng phân bón gốc 4 đúng"
+              class="w-full h-full object-cover"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            />
+            <div class="hidden flex-col items-center justify-center p-6 text-center w-full h-full bg-gradient-to-br from-emerald-950 to-slate-900">
+              <div class="text-4xl font-extrabold text-lime-300 mb-2">4 ĐÚNG</div>
+              <div class="text-sm text-slate-200">Đúng loại • Đúng liều lượng • Đúng thời điểm • Đúng cách</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-300 mt-3 text-center">Tuân thủ “4 Đúng” giúp tối ưu hiệu quả hấp thu dinh dưỡng và bảo vệ môi trường.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 7: MỤC 6 - ẢNH HƯỞNG CỦA PHÂN BÓN ĐẾN MÔI TRƯỜNG ==================== -->
+  <section class="slide" data-section="6">
+    <div class="slide-inner">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="px-3 py-1 rounded-full bg-rose-400/15 border border-rose-400/40 text-rose-300 font-mono text-xs font-bold">MỤC 6</span>
+        <span class="text-xs uppercase tracking-widest text-rose-300 font-semibold">Cảnh báo khi lạm dụng phân bón hóa học</span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-6">
+        6. Ảnh hưởng của phân bón <span class="text-rose-300">đến môi trường</span>
+      </h2>
+
+      <div class="grid lg:grid-cols-12 gap-6 items-stretch">
+        <!-- 4 Tác động môi trường (7 cột) -->
+        <div class="lg:col-span-7 grid sm:grid-cols-2 gap-4">
+          <div class="glass-card rounded-2xl p-5 border-t-2 border-t-amber-400">
+            <div class="flex items-center gap-2.5 mb-2">
+              <span class="text-xl">🏜️</span>
+              <h3 class="text-lg font-bold text-amber-300">Ô nhiễm đất</h3>
+            </div>
+            <p class="text-sm text-slate-200 leading-relaxed">
+              Làm đất chua, chai cứng, tích tụ kim loại nặng và tiêu diệt giun đất, vi sinh vật có lợi.
+            </p>
+          </div>
+
+          <div class="glass-card rounded-2xl p-5 border-t-2 border-t-sky-400">
+            <div class="flex items-center gap-2.5 mb-2">
+              <span class="text-xl">🌊</span>
+              <h3 class="text-lg font-bold text-sky-300">Ô nhiễm nước</h3>
+            </div>
+            <p class="text-sm text-slate-200 leading-relaxed">
+              Phân bón rửa trôi gây hiện tượng <strong class="text-white">phú dưỡng</strong> (tảo nở hoa làm thiếu oxy, khiến cá chết) và làm nhiễm độc nguồn nước ngầm (dư thừa Nitrat).
+            </p>
+          </div>
+
+          <div class="glass-card rounded-2xl p-5 border-t-2 border-t-rose-400">
+            <div class="flex items-center gap-2.5 mb-2">
+              <span class="text-xl">☁️</span>
+              <h3 class="text-lg font-bold text-rose-300">Ô nhiễm không khí</h3>
+            </div>
+            <p class="text-sm text-slate-200 leading-relaxed">
+              Phân đạm bay hơi tạo ra khí nhà kính <span class="font-mono font-bold text-rose-200 bg-rose-500/20 px-1.5 py-0.5 rounded">N₂O</span> (gây biến đổi khí hậu mạnh hơn cả CO₂).
+            </p>
+          </div>
+
+          <div class="glass-card rounded-2xl p-5 border-t-2 border-t-emerald-400">
+            <div class="flex items-center gap-2.5 mb-2">
+              <span class="text-xl">🦋</span>
+              <h3 class="text-lg font-bold text-emerald-300">Suy giảm đa dạng sinh học</h3>
+            </div>
+            <p class="text-sm text-slate-200 leading-relaxed">
+              Môi trường đất và nước bị phá hủy làm mất nơi sinh sống của nhiều loài sinh vật tự nhiên.
+            </p>
+          </div>
+        </div>
+
+        <!-- Hình ảnh tác động môi trường (5 cột) -->
+        <div class="lg:col-span-5 glass-card rounded-3xl p-4 flex flex-col justify-between">
+          <div class="img-frame flex-1 min-h-[230px] flex items-center justify-center">
+            <img
+              src="asset/muc6.png"
+              alt="Ảnh hưởng của phân bón đến đất, nước và không khí"
+              class="w-full h-full object-cover"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            />
+            <div class="hidden flex-col items-center justify-center p-6 text-center w-full h-full bg-gradient-to-br from-rose-950/60 to-slate-900">
+              <div class="font-mono text-2xl font-bold text-rose-300 mb-2">N₂O • NO₃⁻ • Phú dưỡng</div>
+              <div class="text-xs text-slate-300">Tác động lên Đất – Nước – Không khí</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-300 mt-3 text-center">Sơ đồ tác động của dư thừa phân bón đến đất, nguồn nước và khí quyển.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 8: MỤC 7 (TRANG 7A) - XU HƯỚNG PHÂN BÓN TRONG TƯƠNG LAI (5 XU HƯỚNG CHÍNH) ==================== -->
+  <section class="slide" data-section="7">
+    <div class="slide-inner">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full bg-lime-300/15 border border-lime-300/40 text-lime-300 font-mono text-xs font-bold">MỤC 7 • TRANG 1/2</span>
+          <span class="text-xs uppercase tracking-widest text-emerald-300 font-semibold">Định hướng phát triển ngành phân bón</span>
+        </div>
+        <button onclick="goToSlide(10)" class="text-xs px-3 py-1 rounded-full bg-white/10 hover:bg-emerald-500/25 text-lime-300 font-semibold transition cursor-pointer">
+          Xem tiếp: Lợi ích & Kết luận →
+        </button>
+      </div>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-2">
+        7. Xu hướng phân bón <span class="text-lime-300">trong tương lai</span>
+      </h2>
+      <p class="text-sm sm:text-base text-slate-300 mb-5">
+        Phát triển theo hướng <strong class="text-emerald-300">thông minh, thân thiện với môi trường và nâng cao hiệu quả sử dụng</strong> để cây phát triển tốt, tăng năng suất và giảm ô nhiễm.
+      </p>
+
+      <div class="grid lg:grid-cols-12 gap-5 items-stretch">
+        <!-- 5 Xu hướng chính (7 cột) -->
+        <div class="lg:col-span-7 space-y-2.5">
+          <div class="text-xs font-bold uppercase tracking-wider text-lime-300 mb-1">1. Những xu hướng chính</div>
+
+          <div class="glass-card rounded-2xl p-3.5 flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-lg bg-emerald-400/20 text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">01</span>
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-white">Phân bón hữu cơ</h3>
+              <p class="text-xs sm:text-sm text-slate-300">Được sử dụng nhiều hơn để cải tạo đất, tăng độ phì nhiêu và giảm phụ thuộc vào phân bón hóa học.</p>
+            </div>
+          </div>
+
+          <div class="glass-card rounded-2xl p-3.5 flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-lg bg-teal-400/20 text-teal-300 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">02</span>
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-white">Phân bón sinh học</h3>
+              <p class="text-xs sm:text-sm text-slate-300">Ứng dụng vi sinh vật có lợi giúp cây hấp thụ chất dinh dưỡng và phát triển khỏe mạnh.</p>
+            </div>
+          </div>
+
+          <div class="glass-card rounded-2xl p-3.5 flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-lg bg-sky-400/20 text-sky-300 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">03</span>
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-white">Phân bón thông minh</h3>
+              <p class="text-xs sm:text-sm text-slate-300">Có khả năng giải phóng chất dinh dưỡng từ từ, phù hợp với nhu cầu của cây trồng, hạn chế thất thoát phân bón.</p>
+            </div>
+          </div>
+
+          <div class="glass-card rounded-2xl p-3.5 flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-lg bg-indigo-400/20 text-indigo-300 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">04</span>
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-white">Ứng dụng công nghệ cao</h3>
+              <p class="text-xs sm:text-sm text-slate-300">Sử dụng trí tuệ nhân tạo (AI), cảm biến và máy móc để xác định lượng phân bón phù hợp cho từng loại cây trồng.</p>
+            </div>
+          </div>
+
+          <div class="glass-card rounded-2xl p-3.5 flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-lg bg-lime-300/20 text-lime-300 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">05</span>
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-white">Sản xuất phân bón xanh</h3>
+              <p class="text-xs sm:text-sm text-slate-300">Phát triển công nghệ sản xuất phân bón ít phát thải carbon, sử dụng năng lượng tái tạo và tái chế chất thải nông nghiệp.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hình ảnh Phân bón hữu cơ & sinh học (5 cột) -->
+        <div class="lg:col-span-5 glass-card rounded-3xl p-4 flex flex-col justify-between">
+          <div class="img-frame flex-1 min-h-[240px] flex items-center justify-center">
+            <img
+              src="asset/muc7.png"
+              alt="Phân bón hữu cơ và phân bón sinh học"
+              class="w-full h-full object-cover"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            />
+            <div class="hidden flex-col items-center justify-center p-6 text-center w-full h-full bg-gradient-to-br from-emerald-950 to-slate-900">
+              <div class="text-3xl mb-2">♻️🦠</div>
+              <div class="font-bold text-lime-300">Hữu cơ + Sinh học</div>
+              <div class="text-xs text-slate-300 mt-1">Cải tạo đất & Nuôi dưỡng hệ sinh thái bền vững</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-300 mt-3 text-center">Kết hợp phân bón hữu cơ và vi sinh vật có lợi cho đất khỏe, cây tốt.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 9: MỤC 7 (TRANG 7B) - LỢI ÍCH, KẾT LUẬN & THÔNG ĐIỆP ==================== -->
+  <section class="slide" data-section="7">
+    <div class="slide-inner">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full bg-lime-300/15 border border-lime-300/40 text-lime-300 font-mono text-xs font-bold">MỤC 7 • TRANG 2/2</span>
+          <span class="text-xs uppercase tracking-widest text-emerald-300 font-semibold">Giá trị mang lại & Thông điệp xanh</span>
+        </div>
+        <button onclick="goToSlide(9)" class="text-xs px-3 py-1 rounded-full bg-white/10 hover:bg-emerald-500/25 text-slate-300 font-semibold transition cursor-pointer">
+          ← Quay lại: 5 Xu hướng chính
+        </button>
+      </div>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-6">
+        7. Lợi ích & Kết luận <span class="text-lime-300">xu hướng phân bón mới</span>
+      </h2>
+
+      <div class="grid lg:grid-cols-12 gap-6 items-stretch">
+        <!-- Lợi ích & Kết luận (7 cột) -->
+        <div class="lg:col-span-7 flex flex-col gap-4">
+          <!-- 2. Lợi ích -->
+          <div class="glass-card rounded-3xl p-5">
+            <h3 class="text-lg font-bold text-emerald-300 mb-3">2. Lợi ích của xu hướng phân bón trong tương lai</h3>
+            <div class="grid sm:grid-cols-2 gap-2.5 text-sm">
+              <div class="p-3 rounded-xl bg-slate-950/45 border border-white/10 flex items-center gap-2.5">
+                <span class="text-lime-300 font-bold">01.</span>
+                <span>Giúp tăng năng suất và chất lượng nông sản.</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-950/45 border border-white/10 flex items-center gap-2.5">
+                <span class="text-lime-300 font-bold">02.</span>
+                <span>Tiết kiệm chi phí sản xuất cho người nông dân.</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-950/45 border border-white/10 flex items-center gap-2.5">
+                <span class="text-lime-300 font-bold">03.</span>
+                <span>Bảo vệ độ màu mỡ của đất.</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-950/45 border border-white/10 flex items-center gap-2.5">
+                <span class="text-lime-300 font-bold">04.</span>
+                <span>Hạn chế ô nhiễm nguồn nước và môi trường.</span>
+              </div>
+              <div class="sm:col-span-2 p-3 rounded-xl bg-emerald-950/45 border border-emerald-500/30 flex items-center gap-2.5">
+                <span class="text-lime-300 font-bold">05.</span>
+                <span class="font-medium text-white">Góp phần phát triển nền nông nghiệp bền vững.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Kết luận & Thông điệp -->
+          <div class="glass-card rounded-3xl p-5 bg-gradient-to-br from-emerald-950/70 to-slate-900/80 border-lime-300/35">
+            <h3 class="text-lg font-bold text-lime-300 mb-2">3. Kết luận</h3>
+            <p class="text-sm text-slate-200 leading-relaxed mb-4">
+              Trong tương lai, phân bón sẽ không chỉ tập trung vào việc cung cấp dinh dưỡng cho cây trồng mà còn chú trọng đến sức khỏe đất, hiệu quả kinh tế và bảo vệ môi trường. Phân bón hữu cơ, phân bón sinh học và công nghệ sản xuất phân bón thông minh sẽ ngày càng đóng vai trò quan trọng trong nền nông nghiệp hiện đại.
+            </p>
+            <div class="p-4 rounded-2xl bg-lime-300/15 border border-lime-300/50 text-center">
+              <div class="text-[11px] font-mono uppercase tracking-widest text-lime-300 mb-1">THÔNG ĐIỆP</div>
+              <div class="text-base sm:text-lg font-extrabold text-white">
+                “Phát triển phân bón xanh – hướng đến nền nông nghiệp sạch, an toàn và bền vững.”
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hình ảnh nông nghiệp công nghệ cao (5 cột) -->
+        <div class="lg:col-span-5 glass-card rounded-3xl p-4 flex flex-col justify-between">
+          <div class="img-frame flex-1 min-h-[240px] flex items-center justify-center">
+            <img
+              src="asset/muc7.png"
+              alt="Ứng dụng công nghệ cao trong nông nghiệp"
+              class="w-full h-full object-cover"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            />
+            <div class="hidden flex-col items-center justify-center p-6 text-center w-full h-full bg-gradient-to-br from-sky-950 to-slate-900">
+              <div class="text-3xl mb-2">🤖🌱💧</div>
+              <div class="font-bold text-sky-300">Nông nghiệp thông minh</div>
+              <div class="text-xs text-slate-300 mt-1">Tưới nhỏ giọt • Thủy canh • Cảm biến AI</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-300 mt-3 text-center">Các mô hình nông nghiệp công nghệ cao giúp tối ưu dinh dưỡng và bảo vệ môi trường.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 10: MỤC 8 - TỔNG KẾT VÀ CÂU HỎI TƯƠNG TÁC ==================== -->
+  <section class="slide" data-section="8">
+    <div class="slide-inner">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="px-3 py-1 rounded-full bg-lime-300/15 border border-lime-300/40 text-lime-300 font-mono text-xs font-bold">MỤC 8</span>
+        <span class="text-xs uppercase tracking-widest text-emerald-300 font-semibold">Củng cố kiến thức & Giao lưu cùng lớp</span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-5">
+        8. Tổng kết và <span class="text-lime-300">câu hỏi tương tác</span>
+      </h2>
+
+      <div class="grid lg:grid-cols-12 gap-5 items-start">
+        <!-- Cột trái: 1. Tổng kết + Câu 3 Tự luận (5 cột) -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="glass-card rounded-2xl p-5 border-l-4 border-l-emerald-400">
+            <h3 class="text-lg font-extrabold text-emerald-300 mb-2">1. Tổng kết</h3>
+            <p class="text-sm text-slate-200 leading-relaxed">
+              Qua bài thuyết trình, chúng ta đã hiểu được khái niệm, phân loại, thành phần hóa học và vai trò của phân bón đối với cây trồng. Việc sử dụng phân bón đúng cách không chỉ giúp nâng cao năng suất mà còn góp phần bảo vệ môi trường.
+            </p>
+          </div>
+
+          <!-- Câu 3 Tự luận -->
+          <div class="glass-card rounded-2xl p-5 border-l-4 border-l-amber-400">
+            <div class="text-xs font-mono text-amber-300 uppercase mb-1">Câu 3 • Tự luận</div>
+            <h4 class="text-sm sm:text-base font-bold text-white mb-3">
+              Theo bạn, việc lạm dụng phân bón hóa học trong thời gian dài có thể gây ra những tác hại gì đối với môi trường?
+            </h4>
+            <button id="toggleEssayBtn" onclick="toggleEssayAnswer()" class="px-4 py-2 rounded-full bg-amber-300 text-slate-950 font-bold text-xs hover:bg-amber-200 transition cursor-pointer">
+              💡 Xem gợi ý trả lời
+            </button>
+            <div id="essayAnswerBox" class="hidden mt-3 p-3.5 rounded-xl bg-amber-950/40 border border-amber-400/35 text-xs sm:text-sm text-amber-100 leading-relaxed">
+              <strong>Gợi ý trả lời:</strong> Gây ô nhiễm đất, nguồn nước, làm mất cân bằng hệ sinh thái và ảnh hưởng đến sức khỏe con người.
+            </div>
+          </div>
+        </div>
+
+        <!-- Cột phải: 2. Câu hỏi tương tác Trắc nghiệm Câu 1 & Câu 2 (7 cột) -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="text-xs font-bold uppercase tracking-wider text-lime-300">2. Câu hỏi tương tác (Trắc nghiệm)</div>
+
+          <!-- Câu 1 -->
+          <div class="glass-card rounded-2xl p-5 quiz-box" data-quiz="1">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-mono text-emerald-300 font-bold">CÂU 1 (TRẮC NGHIỆM)</span>
+              <span class="quiz-status text-xs font-semibold"></span>
+            </div>
+            <h4 class="text-sm sm:text-base font-bold text-white mb-3">
+              Loại phân bón nào cung cấp đầy đủ ba nguyên tố dinh dưỡng N, P, K?
+            </h4>
+            <div class="grid sm:grid-cols-2 gap-2.5">
+              <button class="quiz-opt p-3 rounded-xl border border-white/15 bg-white/5 text-left text-sm hover:border-emerald-300 transition cursor-pointer" data-ok="false">A. Phân đạm</button>
+              <button class="quiz-opt p-3 rounded-xl border border-white/15 bg-white/5 text-left text-sm hover:border-emerald-300 transition cursor-pointer" data-ok="false">B. Phân lân</button>
+              <button class="quiz-opt p-3 rounded-xl border border-white/15 bg-white/5 text-left text-sm hover:border-emerald-300 transition cursor-pointer" data-ok="false">C. Phân kali</button>
+              <button class="quiz-opt p-3 rounded-xl border border-white/15 bg-white/5 text-left text-sm hover:border-emerald-300 transition cursor-pointer" data-ok="true">D. Phân NPK</button>
+            </div>
+          </div>
+
+          <!-- Câu 2 -->
+          <div class="glass-card rounded-2xl p-5 quiz-box" data-quiz="2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-mono text-sky-300 font-bold">CÂU 2 (TRẮC NGHIỆM)</span>
+              <span class="quiz-status text-xs font-semibold"></span>
+            </div>
+            <h4 class="text-sm sm:text-base font-bold text-white mb-3">
+              Công thức hóa học của phân urê là gì?
+            </h4>
+            <div class="grid sm:grid-cols-2 gap-2.5">
+              <button class="quiz-opt p-3 rounded-xl border border-white/15 bg-white/5 text-left text-sm font-mono hover:border-sky-300 transition cursor-pointer" data-ok="false">A. KCl</button>
+              <button class="quiz-opt p-3 rounded-xl border border-white/15 bg-white/5 text-left text-sm font-mono hover:border-sky-300 transition cursor-pointer" data-ok="true">B. CO(NH₂)₂</button>
+              <button class="quiz-opt p-3 rounded-xl border border-white/15 bg-white/5 text-left text-sm font-mono hover:border-sky-300 transition cursor-pointer" data-ok="false">C. Ca₃(PO₄)₂</button>
+              <button class="quiz-opt p-3 rounded-xl border border-white/15 bg-white/5 text-left text-sm font-mono hover:border-sky-300 transition cursor-pointer" data-ok="false">D. K₂SO₄</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 11: TRANG CẢM ƠN ==================== -->
+  <section class="slide" data-section="8">
+    <div class="slide-inner text-center py-8">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-lime-300/15 border border-lime-300/40 text-lime-300 text-xs font-bold uppercase tracking-widest mb-5">
+        Tổ 2 • Môn Hóa Học
+      </div>
+      <h1 class="text-6xl sm:text-8xl lg:text-9xl font-extrabold tracking-tight mb-4">
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-lime-300 to-teal-200">THANKS</span>
+      </h1>
+      <p class="text-xl sm:text-2xl text-slate-200 max-w-2xl mx-auto mb-6 leading-relaxed">
+        Cảm ơn thầy cô và các bạn đã chú ý lắng nghe phần thuyết trình của <strong class="text-lime-300">Tổ 2</strong>!
+      </p>
+      <div class="w-28 h-1.5 bg-gradient-to-r from-emerald-400 to-lime-300 rounded-full mx-auto mb-6"></div>
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <span class="px-4 py-2 rounded-full glass-card text-xs font-mono text-emerald-300">N • P • K</span>
+        <span class="px-4 py-2 rounded-full glass-card text-xs font-semibold text-lime-300">Sử dụng phân bón 4 Đúng</span>
+        <span class="px-4 py-2 rounded-full glass-card text-xs font-semibold text-sky-300">Nông nghiệp xanh bền vững</span>
+      </div>
+      <div class="mt-8">
+        <button onclick="goToSlide(0)" class="px-5 py-2.5 rounded-full bg-white/10 hover:bg-emerald-500/25 border border-white/20 text-xs font-bold uppercase tracking-wider text-white transition cursor-pointer">
+          ↺ Xem lại từ đầu
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Thanh điều khiển dưới cùng -->
+  <footer class="fixed bottom-0 left-0 right-0 z-20 px-4 md:px-8 py-3 bg-[#04121c]/80 backdrop-blur-md border-t border-emerald-500/15 flex items-center gap-4">
+    <div id="slideLabel" class="text-xs font-semibold text-emerald-300 hidden sm:block min-w-[170px] truncate">
+      Trang bìa • Tổ 2
+    </div>
+    <div class="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+      <div id="progressBar" class="h-full bg-gradient-to-r from-emerald-400 to-lime-300 transition-all duration-300" style="width: 8.33%;"></div>
+    </div>
+    <div id="slideCounter" class="font-mono text-xs text-slate-300 min-w-[54px] text-right">
+      01 / 12
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="prevBtn" aria-label="Trang trước" class="w-9 h-9 rounded-full glass-card flex items-center justify-center text-white hover:text-lime-300 hover:border-lime-300 cursor-pointer">
+        ‹
+      </button>
+      <button id="nextBtn" aria-label="Trang tiếp" class="w-9 h-9 rounded-full glass-card flex items-center justify-center text-white hover:text-lime-300 hover:border-lime-300 cursor-pointer">
+        ›
+      </button>
+    </div>
+  </footer>
+
+  <script>
+    /* =========================================================================
+       1. QUẢN LÝ SLIDE & THANH ĐIỀU HƯỚNG 8 MỤC
+       ========================================================================= */
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const navPills = Array.from(document.querySelectorAll('#quickNav .nav-pill'));
+    const progressBar = document.getElementById('progressBar');
+    const slideCounter = document.getElementById('slideCounter');
+    const slideLabel = document.getElementById('slideLabel');
+
+    const slideTitles = [
+      'Trang bìa • Tổ 2',
+      'Thành viên • Tổ 2',
+      'Mục 1 • Giới thiệu chung',
+      'Mục 2 (1/2) • Đạm & Lân',
+      'Mục 2 (2/2) • Kali & NPK',
+      'Mục 3 • Thành phần hóa học',
+      'Mục 4 • Vai trò & Tác dụng',
+      'Mục 5 • Nguyên tắc 4 Đúng',
+      'Mục 6 • Ảnh hưởng môi trường',
+      'Mục 7 (1/2) • Xu hướng tương lai',
+      'Mục 7 (2/2) • Lợi ích & Kết luận',
+      'Mục 8 • Tổng kết & Tương tác',
+      'Cảm ơn thầy cô và các bạn'
+    ];
+
+    let currentSlide = 0;
+
+    function goToSlide(index) {
+      currentSlide = Math.max(0, Math.min(slides.length - 1, index));
+
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === currentSlide);
+        if (i === currentSlide) {
+          const inner = slide.querySelector('.slide-inner');
+          if (inner) inner.scrollTop = 0;
+        }
+      });
+
+      // Cập nhật thanh tiến trình & nhãn
+      const pct = ((currentSlide + 1) / slides.length) * 100;
+      progressBar.style.width = `${pct}%`;
+      slideCounter.textContent = `${String(currentSlide + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+      slideLabel.textContent = slideTitles[currentSlide] || '';
+
+      // Highlight nút mục lục tương ứng
+      const activeSection = slides[currentSlide].dataset.section;
+      navPills.forEach(pill => {
+        const targetSlide = Number(pill.dataset.goto);
+        const targetSection = slides[targetSlide]?.dataset.section;
+        pill.classList.toggle('active', targetSection === activeSection);
+      });
+    }
+
+    navPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        goToSlide(Number(pill.dataset.goto));
+      });
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', () => goToSlide(currentSlide - 1));
+    document.getElementById('nextBtn').addEventListener('click', () => goToSlide(currentSlide + 1));
+
+    // Điều khiển bàn phím
+    document.addEventListener('keydown', (e) => {
+      if (['ArrowRight', 'PageDown', ' '].includes(e.key)) {
+        if (document.activeElement.tagName !== 'BUTTON') {
+          e.preventDefault();
+          goToSlide(currentSlide + 1);
+        }
+      } else if (['ArrowLeft', 'PageUp'].includes(e.key)) {
+        e.preventDefault();
+        goToSlide(currentSlide - 1);
+      } else if (e.key === 'Home') {
+        goToSlide(0);
+      } else if (e.key === 'End') {
+        goToSlide(slides.length - 1);
+      }
+    });
+
+    // Hỗ trợ vuốt cảm ứng trên điện thoại/máy tính bảng
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      const diff = e.changedTouches[0].screenX - touchStartX;
+      if (Math.abs(diff) > 65) {
+        if (diff < 0) goToSlide(currentSlide + 1);
+        else goToSlide(currentSlide - 1);
+      }
+    }, { passive: true });
+
+    /* =========================================================================
+       2. TƯƠNG TÁC BẢNG THÀNH PHẦN HÓA HỌC (MỤC 3)
+       ========================================================================= */
+    const chemData = [
+      {
+        title: 'Phân đạm',
+        formula: 'CO(NH₂)₂ • NH₄NO₃',
+        desc: '• <strong>CO(NH₂)₂ (Urê):</strong> Hợp chất chứa hàm lượng Nitơ cao (~46%), tan tốt trong nước giúp cây phát triển thân, lá.<br/>• <strong>NH₄NO₃ (Amoni nitrat):</strong> Cung cấp đồng thời ion NH₄⁺ và NO₃⁻ cho cây hấp thu nhanh.'
+      },
+      {
+        title: 'Phân lân',
+        formula: 'Ca(H₂PO₄)₂ • Ca₃(PO₄)₂',
+        desc: '• <strong>Ca(H₂PO₄)₂ (Canxi đihđrophotphat):</strong> Thành phần chính của Supe lân, tan trong nước nên cây dễ hấp thu.<br/>• <strong>Ca₃(PO₄)₂ (Canxi photphat):</strong> Có trong quặng tự nhiên và lân nung chảy, thích hợp bón lót cải tạo đất chua.'
+      },
+      {
+        title: 'Phân kali',
+        formula: 'KCl • K₂SO₄',
+        desc: '• <strong>KCl (Kali clorua - MOP):</strong> Loại phân kali phổ biến nhất, chứa hàm lượng K₂O cao.<br/>• <strong>K₂SO₄ (Kali sunfat - SOP):</strong> Cung cấp thêm lưu huỳnh (S), rất tốt cho cây ăn quả, cây lấy củ tăng độ ngọt.'
+      },
+      {
+        title: 'Phân NPK',
+        formula: 'N • P • K',
+        desc: '• Chứa đồng thời <strong>3 nguyên tố dinh dưỡng đa lượng</strong>: Nitơ (N), Photpho (P) và Kali (K) phối trộn theo các tỷ lệ phù hợp với từng giai đoạn sinh trưởng của cây.'
+      },
+      {
+        title: 'Phân hữu cơ',
+        formula: 'Hợp chất hữu cơ, chất mùn',
+        desc: '• Chứa các <strong>hợp chất hữu cơ và chất mùn</strong> tự nhiên giúp cải thiện kết cấu đất, giữ ẩm, tăng độ phì nhiêu và nuôi dưỡng hệ vi sinh vật có lợi trong đất.'
+      },
+      {
+        title: 'Phân vi lượng',
+        formula: 'Fe • Zn • Cu • Mn • B • Mo',
+        desc: '• Cung cấp các nguyên tố vi lượng như <strong>Sắt (Fe), Kẽm (Zn), Đồng (Cu), Mangan (Mn), Bo (B), Molypden (Mo)</strong> với lượng nhỏ nhưng không thể thiếu cho quá trình trao đổi chất của cây.'
+      }
+    ];
+
+    const chemRows = document.querySelectorAll('#chemTableBody .chem-row');
+    chemRows.forEach(row => {
+      row.addEventListener('click', () => {
+        chemRows.forEach(r => r.classList.remove('selected-row'));
+        row.classList.add('selected-row');
+        const idx = Number(row.dataset.idx);
+        const item = chemData[idx];
+        document.getElementById('chemDetailBadge').textContent = `0${idx + 1} / 06`;
+        document.getElementById('chemDetailTitle').textContent = item.title;
+        document.getElementById('chemDetailFormula').textContent = item.formula;
+        document.getElementById('chemDetailDesc').innerHTML = item.desc;
+      });
+    });
+
+    /* =========================================================================
+       3. TƯƠNG TÁC THẺ 4 ĐÚNG (MỤC 5)
+       ========================================================================= */
+    function selectFourRight(el) {
+      document.querySelectorAll('.four-right-card').forEach(c => c.classList.remove('active-rule'));
+      el.classList.add('active-rule');
+    }
+
+    /* =========================================================================
+       4. TƯƠNG TÁC QUIZ & CÂU HỎI TỰ LUẬN (MỤC 8)
+       ========================================================================= */
+    document.querySelectorAll('.quiz-box').forEach(box => {
+      const options = box.querySelectorAll('.quiz-opt');
+      const status = box.querySelector('.quiz-status');
+      options.forEach(btn => {
+        btn.addEventListener('click', () => {
+          options.forEach(b => {
+            b.classList.remove('border-emerald-400', 'bg-emerald-500/20', 'text-emerald-200', 'border-rose-400', 'bg-rose-500/20', 'text-rose-200');
+          });
+          const isOk = btn.dataset.ok === 'true';
+          if (isOk) {
+            btn.classList.add('border-emerald-400', 'bg-emerald-500/20', 'text-emerald-200');
+            status.textContent = '🎉 Chính xác!';
+            status.className = 'quiz-status text-xs font-bold text-lime-300';
+          } else {
+            btn.classList.add('border-rose-400', 'bg-rose-500/20', 'text-rose-200');
+            status.textContent = '❌ Chưa đúng, thử lại nhé!';
+            status.className = 'quiz-status text-xs font-bold text-rose-300';
+          }
+        });
+      });
+    });
+
+    function toggleEssayAnswer() {
+      const box = document.getElementById('essayAnswerBox');
+      const btn = document.getElementById('toggleEssayBtn');
+      const isHidden = box.classList.toggle('hidden');
+      btn.textContent = isHidden ? '💡 Xem gợi ý trả lời' : '🙈 Ẩn gợi ý trả lời';
+    }
+
+    /* =========================================================================
+       5. HIỆU ỨNG CÁC NGUYÊN TỐ & CÔNG THỨC HÓA HỌC RƠI NHẸ Ở NỀN (CÓ BẬT/TẮT)
+       ========================================================================= */
+    const canvas = document.getElementById('chemCanvas');
+    const ctx = canvas.getContext('2d');
+    const toggleChemBtn = document.getElementById('toggleChemBtn');
+    const chemStatusText = document.getElementById('chemStatusText');
+    const chemStatusDot = document.getElementById('chemStatusDot');
+
+    const formulas = [
+      'N', 'P', 'K',
+      'CO(NH₂)₂', 'NH₄NO₃',
+      'Ca(H₂PO₄)₂', 'Ca₃(PO₄)₂',
+      'KCl', 'K₂SO₄',
+      'Fe', 'Zn', 'Cu', 'Mn', 'B', 'Mo',
+      'N₂O', 'NO₃⁻', 'NH₄⁺'
+    ];
+
+    const colors = [
+      'rgba(52, 211, 153, 0.36)',  // Emerald
+      'rgba(217, 249, 157, 0.34)', // Lime
+      'rgba(56, 189, 248, 0.32)',  // Sky
+      'rgba(251, 191, 36, 0.30)',  // Amber
+      'rgba(244, 114, 182, 0.28)'  // Rose
+    ];
+
+    let particles = [];
+    let animActive = true;
+    let animFrameId = null;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function createParticle(startAtTop = false) {
+      const text = formulas[Math.floor(Math.random() * formulas.length)];
+      const isShort = text.length <= 2;
+      const radius = isShort ? (16 + Math.random() * 8) : (26 + Math.random() * 12);
+      return {
+        x: Math.random() * canvas.width,
+        y: startAtTop ? -radius * 2 : Math.random() * canvas.height,
+        vy: 0.28 + Math.random() * 0.45,
+        vx: (Math.random() - 0.5) * 0.25,
+        wobble: Math.random() * Math.PI * 2,
+        wobbleSpeed: 0.01 + Math.random() * 0.015,
+        radius,
+        text,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        fontSize: isShort ? 13 : 11
+      };
+    }
+
+    function initParticles() {
+      const count = window.innerWidth < 768 ? 14 : 24;
+      particles = Array.from({ length: count }, () => createParticle(false));
+    }
+
+    function renderParticles() {
+      if (!animActive) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.wobble += p.wobbleSpeed;
+        p.y += p.vy;
+        p.x += p.vx + Math.sin(p.wobble) * 0.22;
+
+        if (p.y - p.radius > canvas.height) {
+          particles[i] = createParticle(true);
+          continue;
+        }
+
+        // Vẽ bong bóng hóa học phát sáng mờ
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(7, 27, 42, 0.28)';
+        ctx.fill();
+        ctx.lineWidth = 1.1;
+        ctx.strokeStyle = p.color;
+        ctx.stroke();
+
+        // Vẽ ký hiệu nguyên tố / công thức
+        ctx.font = `700 ${p.fontSize}px "JetBrains Mono", monospace`;
+        ctx.fillStyle = p.color.replace(/0\.\d+\)/, '0.72)');
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.text, p.x, p.y);
+        ctx.restore();
+      }
+
+      animFrameId = requestAnimationFrame(renderParticles);
+    }
+
+    toggleChemBtn.addEventListener('click', () => {
+      animActive = !animActive;
+      if (animActive) {
+        canvas.style.opacity = '1';
+        chemStatusText.textContent = 'BẬT';
+        chemStatusDot.classList.remove('hidden');
+        renderParticles();
+      } else {
+        canvas.style.opacity = '0';
+        chemStatusText.textContent = 'TẮT';
+        chemStatusDot.classList.add('hidden');
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      initParticles();
+    });
+
+    window.addEventListener('load', () => {
+      resizeCanvas();
+      initParticles();
+      renderParticles();
+      goToSlide(0);
+    });
+  </script>
+</body>
+</html>
